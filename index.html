@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h1>WORDLE</h1>
+    <hr class="title-divider" />
+
+    <div id="game-board"></div>
+    <div id="keyboard" class="keyboard"></div>
+
+    <div id="play-again-container" style="display: none;">
+      <button id="play-again" class="play-again-button">Play Again!</button>
+    </div>
+
+    <div id="toast" class="toast">
+      <div id="toast-message"></div>
+    </div>
+
+    <!-- INSTRUCTIONS -->
+    <hr class="footer-divider" />
+    <h2>How To Play</h2>
+    <div class="content">
+      <p>Use your keyboard or click the on-screen keys to guess the hidden 5-letter word.</p>
+      <p>You have 6 attempts to find the correct word.</p>
+      <p>Each guess must be a real 5-letter word. Press "Enter" to submit your guess.</p>
+      <p>After submitting a guess, the tiles will change color to show how close you are:</p>
+      
+      <h3><strong>Examples</strong></h3>
+      <div class="example">
+        <div class="example-row">
+          <div class="tile correct">P</div>
+          <div class="tile">I</div>
+          <div class="tile">X</div>
+          <div class="tile">E</div>
+          <div class="tile">L</div>
+        </div>
+        <p>The letter <strong>P</strong> is in the word and in the correct spot.</p>
+      </div>
+
+      <div class="example">
+        <div class="example-row">
+          <div class="tile">C</div>
+          <div class="tile present">L</div>
+          <div class="tile">O</div>
+          <div class="tile">U</div>
+          <div class="tile">D</div>
+        </div>
+        <p>The letter <strong>L</strong> is in the word but in the wrong spot.</p>
+      </div>
+
+      <div class="example">
+        <div class="example-row">
+          <div class="tile">G</div>
+          <div class="tile">A</div>
+          <div class="tile absent">M</div>
+          <div class="tile">E</div>
+          <div class="tile">R</div>
+        </div>
+        <p>The letter <strong>E</strong> is not in the word in any spot at all.</p>
+      </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
