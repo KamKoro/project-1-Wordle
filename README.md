@@ -7,4 +7,4 @@ Wordle is a word puzzle game that game challenges players to correctly guess a f
 
 
 Technologies Used: HTML, CSS, Javascript
-Next Steps: Dark Mode, Hard Mode 
+Next Steps: implement Dark Mode option, implement hard mode difficultiy option
