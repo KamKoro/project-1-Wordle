@@ -1,0 +1,244 @@
+/* === Base Styles === */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #f2f2f2; /* Soft light gray for better contrast */
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+h1 {
+  margin: 1px 0 10px;
+  color: #111; /* Darker text for better contrast */
+  font-size: 27px;
+  text-align: center;
+}
+
+h2, h3, p {
+  color: #222;
+}
+
+.content {
+  max-width: 800px;
+  width: 100%;
+  margin-top: 60px;
+  margin-left: 0;
+  padding-left: 5px;
+  align-self: flex-start;
+  text-align: left;
+}
+
+.title-divider {
+  width: 100%;
+  max-width: 800px;
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 5px auto 12px;
+}
+
+.footer-divider {
+  width: 100%;
+  max-width: 800px;
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 60px auto 25px; 
+}
+
+
+/* === Game Board === */
+#game-board {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 6px;
+  margin: 4px 0; 
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+/* === Tiles === */
+.tile {
+  width: 55px;
+  height: 55px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 38px;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: white;
+  border: 2px solid #ccc;
+  color: #111;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.tile.correct {
+  background-color: #217346;
+  border-color: #217346;
+  color: white;
+}
+
+.tile.present {
+  background-color: #c9a500;
+  border-color: #c9a500;
+  color: white;
+}
+
+.tile.absent {
+  background-color: #555;
+  border-color: #555;
+  color: white;
+}
+
+/* === Keyboard === */
+#keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  user-select: none;
+  margin-top: 60px;
+  margin-bottom: 51px;
+}
+
+#keyboard .row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+#keyboard button {
+  background-color: white;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  padding: 14px;
+  min-height: 55px;
+  min-width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  font-weight: bold;
+  color: #111;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+#keyboard button.correct {
+  background-color: #217346;
+  border-color: #217346;
+  color: white;
+}
+
+#keyboard button.present {
+  background-color: #c9a500;
+  border-color: #c9a500;
+  color: white;
+}
+
+#keyboard button.absent {
+  background-color: #555;
+  border-color: #555;
+  color: white;
+}
+
+#keyboard button:hover {
+  background-color: #999; /* Darker hover state */
+}
+
+#keyboard button:focus {
+  outline: 3px solid #FF6347; /* High contrast focus outline */
+}
+
+/* === Play Again Button === */
+#play-again-container {
+  display: none;
+  margin-top: 5px;
+  display: flex;
+  justify-content: center;
+}
+
+.play-again-button {
+  background-color: #217346;
+  color: white;
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.play-again-button.correct {
+  background-color: #217346;
+  border-color: #217346;
+  color: white;
+}
+
+.play-again-button.present {
+  background-color: #c9a500;
+  border-color: #c9a500;
+  color: white;
+}
+
+.play-again-button.absent {
+  background-color: #555;
+  border-color: #555;
+  color: white;
+}
+
+.play-again-button:hover {
+  background-color: #999; /* Darker hover state */
+}
+
+.play-again-button:focus {
+  outline: 3px solid #FF6347; /* High contrast focus outline */
+}
+
+.example {
+  margin-bottom: 24px;
+}
+
+.example-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.example-row .tile {
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  border-width: 1.5px;
+}
+
+/* === Toast Notification === */
+.toast {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  background-color: #222;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.toast.show {
+  opacity: 1;
+  pointer-events: auto;
+}
