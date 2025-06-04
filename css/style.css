@@ -8,14 +8,14 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  background-color: #f2f2f2; /* Soft light gray for better contrast */
+  background-color: #f2f2f2; 
   padding: 10px 20px;
   box-sizing: border-box;
 }
 
 h1 {
   margin: 1px 0 10px;
-  color: #111; /* Darker text for better contrast */
+  color: #111; 
   font-size: 27px;
   text-align: center;
 }
@@ -155,9 +155,7 @@ h2, h3, p {
   background-color: #999; /* Darker hover state */
 }
 
-#keyboard button:focus {
-  outline: 3px solid #FF6347; /* High contrast focus outline */
-}
+
 
 /* === Play Again Button === */
 #play-again-container {
@@ -199,10 +197,6 @@ h2, h3, p {
 
 .play-again-button:hover {
   background-color: #999; /* Darker hover state */
-}
-
-.play-again-button:focus {
-  outline: 3px solid #FF6347; /* High contrast focus outline */
 }
 
 .example {

@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let currentGuess = '';
   let hiddenWord = '';
 
-  // ===  Cached Element References === //
+  // === Cached Element References === //
   const board = document.getElementById('game-board');
   const keyboard = document.getElementById('keyboard');
   const playAgainContainer = document.getElementById('play-again-container');
@@ -23,10 +23,12 @@ window.addEventListener('DOMContentLoaded', () => {
     currentGuess = '';
     playAgainContainer.style.display = 'none';
     createBoard();
-    setupKeyboard();  
+    setupKeyboard();
     chooseHiddenWord();
   }
 
+  // Create the game board
+  // Each row will contain the same number of tiles as the word length
   function createBoard() {
     board.innerHTML = '';
     for (let row = 0; row < maxAttempts; row++) {
@@ -41,12 +43,14 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Choose a random word from the word list
   function chooseHiddenWord() {
     const index = Math.floor(Math.random() * wordList.length);
     hiddenWord = wordList[index].toUpperCase();
     console.log('The hidden word is:', hiddenWord);
   }
 
+  // Set up the keyboard layout
   function setupKeyboard() {
     const layout = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -54,6 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
       ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
     ];
 
+    // Clear the keyboard
     keyboard.innerHTML = layout
       .map(row => `
         <div class="row">
@@ -63,9 +68,11 @@ window.addEventListener('DOMContentLoaded', () => {
       .join('');
   }
 
+  // Handle keyboard input
   function handleInput(key) {
     key = key.toUpperCase();
 
+    // Handle special keys
     if (key === 'BACKSPACE' || key === '⌫') {
       currentGuess = currentGuess.slice(0, -1);
     } else if (key === 'ENTER') {
@@ -75,9 +82,11 @@ window.addEventListener('DOMContentLoaded', () => {
       currentGuess += key;
     }
 
+    // Update the current row with the current guess
     updateCurrentTiles();
   }
 
+  // Update the current tiles in the current row
   function updateCurrentTiles() {
     const row = board.children[currentRow];
     for (let i = 0; i < wordLength; i++) {
@@ -86,6 +95,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Show a toast message
   function showToast(message, duration = 3000) {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toast-message');
@@ -98,6 +108,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, duration);
   }
 
+  // Handle the guess when the user presses Enter
   function handleGuess() {
     const guess = currentGuess.toUpperCase();
     if (guess.length !== wordLength) {
@@ -105,11 +116,13 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Check if the guess is in the word list
     if (!wordList.includes(guess)) {
       showToast('Not in word list.');
       return;
     }
 
+    // Check if the guess is correct
     const row = board.children[currentRow];
     const secretCopy = hiddenWord.split('');
     const tileStates = Array(wordLength).fill('absent');
@@ -121,6 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Check for present letters
     for (let i = 0; i < wordLength; i++) {
       if (tileStates[i] === 'correct') continue;
       const idx = secretCopy.indexOf(guess[i]);
@@ -130,6 +144,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Check for absent letters
     for (let i = 0; i < wordLength; i++) {
       const tile = row.children[i];
       const letter = guess[i];
@@ -145,6 +160,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }, i * 300);
     }
 
+    // Update the keyboard states
     updateKeyboardStates(guess, tileStates);
 
     if (guess === hiddenWord) {
@@ -155,19 +171,21 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Move to the next row
     currentRow++;
     currentGuess = '';
 
-    if (currentRow >= maxAttempts) {
+    if (currentRow >= maxAttempts) { 
       setTimeout(() => {
         showToast(`Game over! The word was ${hiddenWord}`);
         showPlayAgain();
-      }, wordLength * 300 + 300);
+      }, wordLength * 300 + 300); // Show the play again button after the last guess
     } else {
       updateCurrentTiles();
     }
   }
 
+  // Update the keyboard states based on the guess
   function updateKeyboardStates(guess, tileStates) {
     guess.split('').forEach((letter, i) => {
       const keyButton = keyboard.querySelector(`[data-key="${letter}"]`);
@@ -183,11 +201,13 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Show the play again button
   function showPlayAgain() {
     playAgainContainer.style.display = 'block';
   }
 
   // === Event Listeners ===
+  // Handle keyboard input
   document.addEventListener('keydown', (e) => {
     if (/^[a-zA-Z]$/.test(e.key) || e.key === 'Backspace' || e.key === 'Enter') {
       handleInput(e.key);
@@ -195,14 +215,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle keyboard button clicks
   keyboard.addEventListener('click', (e) => {
     if (e.target.matches('.key')) {
       handleInput(e.target.dataset.key);
     }
   });
 
+  // Handle play again button click
   playAgainButton.addEventListener('click', initializeGame);
 
-  // === Initialization === // 
+  // === Initialization === //
   initializeGame();
 });
