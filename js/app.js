@@ -13,6 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let isGameOver = false;
 
   // === Cached Element References === //
+  // === Cached Element References === //
   const board = document.getElementById('game-board');
   const keyboard = document.getElementById('keyboard');
   const playAgainContainer = document.getElementById('play-again-container');
@@ -88,10 +89,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
     playAgainContainer.style.display = 'none';
     createBoard();
-    setupKeyboard();  
-    chooseHiddenWord();
+    setupKeyboard();
+    resetKeyboardVisuals();
+
+    hiddenWord = pickSolution();
+    if (!hiddenWord) {
+      showToast('No solutions loaded.');
+      isGameOver = true;
+      return;
+    }
+    // Dev aid: reveal in console
+    console.log('The hidden word is:', hiddenWord);
   }
 
+  // Create the game board
   function createBoard() {
     board.innerHTML = '';
     for (let row = 0; row < maxAttempts; row++) {
@@ -106,12 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function chooseHiddenWord() {
-    const index = Math.floor(Math.random() * wordList.length);
-    hiddenWord = wordList[index].toUpperCase();
-    console.log('The hidden word is:', hiddenWord);
-  }
-
+  // Set up the keyboard layout
   function setupKeyboard() {
     const layout = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -130,11 +136,13 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle keyboard input
+  // Handle keyboard input
   function handleInput(key) {
     if (isAnimating || isGameOver) return;
 
     key = key.toUpperCase();
 
+    // Handle special keys
     // Handle special keys
     if (key === 'BACKSPACE' || key === '⌫') {
       currentGuess = currentGuess.slice(0, -1);
@@ -150,6 +158,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Update the current tiles in the current row
+  // Update the current tiles in the current row
   function updateCurrentTiles() {
     const row = board.children[currentRow];
     if (!row) return;
@@ -159,6 +168,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Show a toast message
   // Show a toast message
   function showToast(message, duration = 3000) {
     const toast = document.getElementById('toast');
@@ -173,6 +183,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle the guess when the user presses Enter
+  // Handle the guess when the user presses Enter
   function handleGuess() {
     const guess = currentGuess.toUpperCase();
     const row = board.children[currentRow];
@@ -185,13 +196,13 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!wordList.includes(guess)) {
+    if (!allowedSet.has(guess)) {
       showToast('Not in word list.');
       shakeRow(row);
       return;
     }
 
-    const row = board.children[currentRow];
+    // Compute tile states
     const secretCopy = hiddenWord.split('');
     const tileStates = Array(wordLength).fill('absent');
 
@@ -203,6 +214,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Second pass — yellows
     for (let i = 0; i < wordLength; i++) {
       if (tileStates[i] === 'correct') continue;
       const idx = secretCopy.indexOf(guess[i]);
@@ -212,22 +224,20 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Animate flip
+    isAnimating = true;
     for (let i = 0; i < wordLength; i++) {
       const tile = row.children[i];
       const letter = guess[i];
-
-      setTimeout(() => {
-        tile.style.transition = 'transform 0.3s ease';
-        tile.style.transform = 'rotateX(90deg)';
-        setTimeout(() => {
-          tile.textContent = letter;
-          tile.classList.add(tileStates[i]);
-          tile.style.transform = 'rotateX(0deg)';
-        }, 150);
-      }, i * 300);
+      flipTile(tile, letter, tileStates[i], i);
     }
 
-    updateKeyboardStates(guess, tileStates);
+    // After animation finishes…
+    setTimeout(() => {
+      isAnimating = false;
+
+      // Update keyboard (best-per-letter for this guess)
+      updateKeyboardStates(guess, tileStates);
 
       if (guess === hiddenWord) {
         isGameOver = true;
@@ -236,39 +246,46 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-    currentRow++;
-    currentGuess = '';
+      currentRow++;
+      currentGuess = '';
 
-    if (currentRow >= maxAttempts) {
-      setTimeout(() => {
+      if (currentRow >= maxAttempts) {
+        isGameOver = true;
         showToast(`Game over! The word was ${hiddenWord}`);
         showPlayAgain();
-      }, wordLength * 300 + 300);
-    } else {
-      updateCurrentTiles();
+      } else {
+        updateCurrentTiles();
+      }
+    }, wordLength * STAGGER_MS + FLIP_MS + 50);
+  }
+
+  // Update the keyboard states based on this single guess:
+  // pick the best state per letter (correct > present > absent),
+  // then apply it with the no-downgrade rule.
+  function updateKeyboardStates(guess, tileStates) {
+    const best = new Map(); // letter -> best state seen this guess
+
+    for (let i = 0; i < guess.length; i++) {
+      const letter = guess[i];
+      const state = tileStates[i]; // 'correct' | 'present' | 'absent'
+      const prev = best.get(letter);
+      if (!prev || keyRank[state] > keyRank[prev]) {
+        best.set(letter, state);
+      }
+    }
+
+    for (const [letter, state] of best) {
+      setKeyState(letter, state);
     }
   }
 
-  function updateKeyboardStates(guess, tileStates) {
-    guess.split('').forEach((letter, i) => {
-      const keyButton = keyboard.querySelector(`[data-key="${letter}"]`);
-      if (!keyButton) return;
-
-      if (tileStates[i] === 'correct') {
-        keyButton.classList.add('correct');
-      } else if (tileStates[i] === 'present') {
-        keyButton.classList.add('present');
-      } else {
-        keyButton.classList.add('absent');
-      }
-    });
-  }
-
+  // Show the play again button
   function showPlayAgain() {
     playAgainContainer.style.display = 'block';
   }
 
   // === Event Listeners ===
+  // Handle keyboard input
   // Handle keyboard input
   document.addEventListener('keydown', (e) => {
     const k = e.key;
@@ -278,6 +295,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle on-screen keyboard button clicks
   keyboard.addEventListener('click', (e) => {
     const btn = e.target.closest('.key');
     if (!btn) return;
@@ -285,8 +303,10 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Handle play again button click
+  // Handle play again button click
   playAgainButton.addEventListener('click', initializeGame);
 
+  // === Initialization === //
   // === Initialization === //
   initializeGame();
 });
