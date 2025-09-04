@@ -1,57 +1,190 @@
-// WORD LIST
-let wordList= [
-// A      
-      "ABOVE", "ABYSS", "ACTOR", "ADIEU", "ADMIT", "ADOPT", "ADORE", "AFFIX", "AFTER", "AGORA", "AGREE", "AHEAD", "ALBUM", "ALERT", "ALIEN", "ALIVE", "ALLEY", "ALPHA", "AMAZE", "AMPLE", "ANGEL", "ANGLE", "ANGST", "APPLE", "APPLY", "ARMOR", "ARISE", "AROMA", "ASSET", "AVOID", "AWARD", "AWARE", "AZURE",
+/* data.js — word lists + utilities
+   - allowedGuesses: big list (anything users may type)
+   - solutionList: auto-built from allowedGuesses EXCLUDING likely plurals
+   - Normalises, de-dupes, validates (A–Z only, 5 letters)
+   - Exposes:
+       window.WORD_LEN
+       window.allowedGuesses        (raw)
+       window.solutionList          (raw, auto-filtered)
+       window.ALLOWED               (normalised, deduped)
+       window.SOLUTIONS             (normalised, deduped)
+       window.ALLOWED_SET           (Set for O(1) validation)
+       window.pickRandomSolution()  -> string
+       window.solutionForDate(date, salt) -> string
+*/
+
+// --------------------------- Config ---------------------------
+const WORD_LEN = 5;
+const DAILY_EPOCH_ISO = '2021-06-19T00:00:00Z';
+const DAILY_SALT = 137;
+window.WORD_LEN = WORD_LEN;
+
+// --------------------------- Raw List (your original) ---------------------------
+let allowedGuesses = [
+// A
+"ABOUT","ABOVE","ABYSS","ACORN","ACTOR","ADIEU","ADMIT","ADOPT","ADORE","ADULT","AFFIX","AFTER","AGAIN","AGILE","AGORA","AGREE","AHEAD","ALARM","ALBUM","ALERT","ALIEN","ALIVE","ALLEY","ALLOW","ALONE","ALONG","ALOUD","ALPHA","ALSO","ALTER","AMAZE","AMBER","AMONG","AMPLE","AMUSE","ANGEL","ANGER","ANGLE","ANGRY","ANGST","APART","APPLE","APPLY","ARISE","AROMA","ARROW","ASIDE","ASSET","AUDIO","AVERT","AVOID","AWARD","AWARE","AZURE",
 // B
-      "BACON", "BAKER", "BANJO", "BASIC", "BEACH", "BEARD", "BEAST", "BEGUN", "BELCH", "BELLY", "BENCH", "BIBLE", "BINGE", "BINGO", "BIRTH", "BISON", "BLAME", "BLANK", "BLAST", "BLAZE", "BLEND", "BLINK", "BLISS", "BLOCK", "BLOOM", "BLUFF", "BLURT", "BLUSH", "BOAST", "BOATS", "BOOTH", "BOUND", "BRAKE", "BRASH", "BRAVE", "BRAVO", "BREAD", "BREAK", "BRICK", "BRIEF", "BRINE", "BROKE", "BROOD", "BRUSH", "BUDGE", "BUNCH",
+"BACON","BAKER","BANJO","BASIC","BEACH","BEARD","BEAST","BEGAN","BEGIN","BELOW","BELCH","BELLY","BENCH","BERRY","BIBLE","BINGE","BINGO","BIRTH","BISON","BLACK","BLADE","BLAME","BLANK","BLAST","BLAZE","BLEAK","BLEND","BLIND","BLINK","BLISS","BLOCK","BLOOD","BLOOM","BLOUSE","BLUFF","BLUNT","BLURT","BLUSH","BOARD","BOAST","BOATS","BOOTH","BOUND","BRAIN","BRAKE","BRAND","BRASH","BRAVE","BRAVO","BREAD","BREAK","BRICK","BRIDE","BRIEF","BRINE","BRING","BROAD","BROKE","BROOD","BROWN","BRUSH","BUILD","BUDGE","BUNCH","BURST","BUYER",
 // C
-      "CABLE", "CANDY", "CHAOS", "CHARM", "CHASE", "CHESS", "CHEAP", "CHILL", "CHIRP", "CHUNK", "CIDER", "CIVIC", "CIVIL", "CLASH", "CLASS", "CLEAN", "CLEAR", "CLIMB", "CLOUD", "CLOVE", "COAST", "CRANE", "CRASH", "CRATE", "CRAWL", "CRAZY", "CRISP", "CROWN", "CUBIC", "CURLY", "CURVE", "CYCLE", "CYBER", "CYNIC",
-// D
-      "DAILY", "DAISY", "DANCE", "DANDY", "DARTS", "DAUNT", "DEALT", "DEBIT", "DECAL", "DECOY", "DEFER", "DEITY", "DELAY", "DELTA", "DELVE", "DENSE", "DEVIL", "DICEY", "DIGIT", "DINER", "DINGO", "DIZZY", "DODGE", "DOCKS", "DOLLY", "DONOR", "DOORS", "DOUBT", "DOUGH", "DOUSE", "DRAFT", "DRAMA", "DRANK", "DRAPE", "DREAD", "DREAM", "DRIFT", "DRILL", "DRINK", "DRIVE", "DRONE", "DROVE", "DUCKS", "DUSTY", "DWELL", "DYING",
-// E
-      "EAGER", "EAGLE", "EERIE", "EIGHT", "EJECT", "ELBOW", "ELDER", "ELITE", "ELOPE", "ELUDE", "EMAIL", "EMBER", "EMPTY", "ENACT", "ENJOY", "ENTER", "ENTRY", "EPOCH", "EQUAL", "EQUIP", "ERASE", "ERROR", "EVENT", "EVERY", "EVOKE", "EXACT", "EXALT", "EXCEL", "EXERT", "EXILE", "EXIST", "EXITS", "EXTRA",
-// F
-      "FABLE", "FEAST", "FENCE", "FETCH", "FIGHT", "FIFTY", "FIZZY", "FLAIR", "FLARE", "FLAME", "FLASH", "FLESH", "FLINT", "FLOCK", "FLOOD", "FLUTE", "FORCE", "FOUND", "FRAIL", "FRANK", "FRESH", "FROST", "FROWN", "FRUIT", "FUNGI", "FUNNY", "FUNKY", "FUZZY",
-// G
-      "GAMER", "GAMES", "GAUGE", "GAUNT", "GAVEL", "GENRE", "GHOST", "GIDDY", "GLAND", "GLARE", "GLEAN", "GLIDE", "GLOBE", "GLOOM", "GLORY", "GLOVE", "GORGE", "GRACE",  "GRAND", "GRAPE", "GRASS", "GRAVE", "GRAZE", "GRASP", "GREET", "GRILL", "GRIND", "GROSS", "GUARD",
-// H
-      "HAPPY", "HASTE", "HASTY", "HATCH", "HEARD", "HEART", "HEIST", "HELLO", "HIKER", "HINGE", "HITCH", "HOBBY", "HONEY", "HORSE", "HOUND", "HOUSE", "HOVER", "HULKY", "HUMAN", "HUMID", "HURLS", "HURRY", "HUSKY", "HYENA", "HYDRA", "HYPER",
-// I
-      "ICILY", "ICING", "IDEAL", "IDEAS", "IGLOO", "IMAGE", "IMPLY", "INBOX", "INCUR", "INDEX", "INERT", "INFER", "INLAY", "INLET", "INNER", "INPUT", "INTRO", "IRATE", "IRONY", "ISSUE", "ITCHY", "IVORY",
-// J
-      "JAZZY", "JELLY", "JERKY", "JEWEL", "JOINT", "JOKER", "JOKES", "JOLLY", "JOUST", "JUDGE", "JUICE", "JUMPS", "JUMPY", "JUROR",
-// K
-      "KARMA", "KAYAK", "KIOSK", "KNACK", "KNAVE", "KNEAD", "KNEEL", "KNELT", "KNIFE", "KNOCK", "KOALA", "KUDOS",
+"CABIN","CACHE","CABLE","CAMEL","CANDY","CANOE","CARGO","CARRY","CAUSE","CHAIR","CHALK","CHAOS","CHARM","CHART","CHASE","CHEAP","CHEER","CHEST","CHIEF","CHILD","CHILL","CHIME","CHIRP","CHOIR","CHOKE","CHORD","CHUNK","CIDER","CIVIC","CIVIL","CLAIM","CLASH","CLASS","CLEAN","CLEAR","CLIMB","CLOCK","CLOSE","CLOTH","CLOUD","CLOVE","CLOWN","COACH","COAST","COLOR","COUNT","COURT","COVER","CRACK","CRANE","CRASH","CRATE","CRAWL","CRAZY","CRIME","CRISP","CROWD","CRUEL","CRUSH","CRUST","CROWN","CUBIC","CURLY","CURVE","CYCLE","CYBER","CYNIC",
+
+"DAILY","DAISY","DANCE","DANDY","DARTS","DAUNT","DEATH","DEALT","DEBIT","DECAL","DECOY","DEFER","DEITY","DELAY","DELTA","DELVE","DEMON","DENSE","DEPTH","DEVIL","DICEY","DIGIT","DINER","DINGO","DIRTY","DISCO","DIZZY","DODGE","DOING","DOCKS","DOLLY","DONOR","DOORS","DOUBT","DOUGH","DOUSE","DRAFT","DRAMA","DRANK","DRAPE","DREAD","DREAM","DRESS","DRIED","DRIFT","DRILL","DRINK","DRIVE","DROVE","DRONE","DROVE","DRUGS","DRUNK","DRYER","DUCKS","DUSTY","DWARF","DWELL","DYING",
+
+"EARLY","EAGER","EAGLE","EARTH","EASEL","EATEN","EBONY","EERIE","EIGHT","EJECT","ELATE","ELBOW","ELDER","ELFIN","ELITE","ELOPE","ELUDE","EMAIL","EMBER","EMPTY","ENACT","ENEMY","ENJOY","ENSUE","ENTER","ENTRY","EPOCH","EQUAL","EQUIP","ERASE","ERROR","ESSAY","ETHIC","ETHOS","EVENT","EVERY","EVOKE","EVADE","EVICT","EXACT","EXALT","EXCEL","EXERT","EXILE","EXIST","EXITS","EXTRA",
+
+"FABLE","FAINT","FAITH","FALSE","FANCY","FATAL","FAULT","FEAST","FENCE","FETCH","FIBRE","FIELD","FIGHT","FINAL","FIRST","FIFTY","FIZZY","FLAIR","FLARE","FLAME","FLASH","FLESH","FLINT","FLOCK","FLOOD","FLOOR","FLORA","FLUTE","FOCUS","FORCE","FORGE","FORTH","FORTY","FOUND","FRAIL","FRANK","FRAUD","FRESH","FRONT","FROST","FROWN","FROZE","FRUIT","FUNGI","FUNNY","FUNKY","FUZZY",
+
+"GAMES","GAMER","GAUGE","GAUNT","GAVEL","GENRE","GHOST","GIANT","GIDDY","GIVEN","GLAND","GLARE","GLASS","GLEAM","GLEAN","GLIDE","GLOBE","GLOOM","GLORY","GLOVE","GOING","GORGE","GRACE","GRAND","GRANT","GRAPE","GRASS","GRAVE","GRAZE","GRASP","GREAT","GREEN","GREET","GRILL","GRIND","GROUP","GROSS","GROWN","GUARD","GUESS","GUIDE","GUEST",
+
+"HABIT","HAPPY","HANDS","HARDY","HASTE","HASTY","HATCH","HAUNT","HEARD","HEART","HEAVY","HEDGE","HEIST","HELIX","HELLO","HERON","HIKER","HINGE","HITCH","HOBBY","HOLLY","HONEY","HORSE","HOUND","HOUSE","HOTEL","HOVER","HULKY","HUMAN","HUMID","HUMOR","HURLS","HURRY","HUSKY","HYDRA","HYENA","HYPER",
+
+"ICILY","ICING","ICONS","IDEAL","IDEAS","IDIOM","IGLOO","IMAGE","IMPLY","INBOX","INCUR","INDEX","INERT","INFER","INLAY","INLET","INNER","INPUT","INTRO","INVOK","IRATE","IRONY","ISLET","ISSUE","ITCHY","IVIED","IVORY",
+
+"JAZZY","JELLO","JELLY","JELLS","JERKY","JEWEL","JOINT","JOIST","JOKER","JOKES","JOLLY","JOUST","JUDGE","JUICE","JUICY","JUMBO","JUMPS","JUMPY","JUNKS","JUNTO","JUROR","JURRY",
+
+"KAPPA","KARMA","KAYAK","KETCH","KHAKI","KINKY","KIOSK","KITTY","KNACK","KNAVE","KNEAD","KNEEL","KNELT","KNIFE","KNOCK","KNOWN","KOALA","KRAUT","KUDOS",
 // L
-      "LASER", "LATCH", "LEAFY", "LEAST", "LEMON", "LEVEL", "LIGHT", "LIMBO", "LINGO", "LINKS", "LIVED", "LIVER", "LIVES", "LOCAL", "LODGE", "LOFTY", "LOVER", "LOWLY", "LUCID", "LUCKY", "LUNAR", "LUNGE", "LURCH", "LURID","LYRIC",
+"LABEL","LARGE","LASER","LATCH","LAYER","LEAFY","LEARN","LEAST","LEASH","LEAVE","LEMON","LEVEL","LEVER","LIGHT","LIMBO","LINGO","LINKS","LITHE","LIVED","LIVER","LIVES","LOCAL","LODGE","LOFTY","LOGIC","LOOSE","LOOPY","LOSER","LOTUS","LOVER","LOWER","LOWLY","LOYAL","LUCID","LUCKY","LUNCH","LUNAR","LUNGE","LURCH","LURID","LYRIC",
 // M
-      "MACHO", "MAGIC", "MAJOR", "MAKER", "MANGO", "MARCH", "MERIT", "METAL", "METER", "MIGHT", "MIMIC", "MINOR", "MIRTH", "MOLAR", "MONEY", "MOOSE", "MORAL", "MOTIF", "MOUNT", "MOUSE", "MOUTH", "MOVER", "MUNCH", "MURKY", "MUSIC", "MYTHS",
+"MACHO","MAGIC","MAJOR","MAKER","MANGO","MAPLE","MARCH","MATCH","MEANT","MERIT","METAL","METER","METRE","MICRO","MIGHT","MINED","MINER","MINOR","MINUS","MIMIC","MIRTH","MODEL","MOLAR","MONEY","MONTH","MOOSE","MORAL","MOSSY","MOTEL","MOTIF","MOTOR","MOUNT","MOUSE","MOUTH","MOVIE","MOVER","MUNCH","MURKY","MUSIC","MUTED","MYTHS",
 // N
-      "NAIVE", "NASTY", "NERVE", "NEVER", "NICHE", "NIFTY", "NIGHT", "NINJA", "NINTH", "NOBLE", "NOISE", "NORTH", "NOTCH", "NUDGE", "NURSE", "NUTTY", "NYMPH",
+"NADIR","NAIVE","NAKED","NANNY","NATAL","NAVAL","NASTY","NAVEL","NEIGH","NERVE","NEVER","NICHE","NIECE","NIFTY","NIGHT","NINJA","NINTH","NOBLE","NOBLY","NOISE","NORTH","NOTCH","NOTED","NOVEL","NUDGE","NURSE","NUTTY","NYMPH",
 // O
-      "OASIS", "OCCUR", "OCEAN", "ODDLY", "OLDER", "OLIVE", "ONION", "ONSET", "OPTIC", "ORBIT", "ORDER", "ORGAN", "OTHER", "OUTDO", "OUTER", "OVERT", "OXIDE",
+"OASIS","OBESE","OCCUR","OCEAN","OCTAL","ODDLY","OFTEN","OLDER","OLIVE","OMITS","ONION","ONSET","OPERA","OPINE","OPTED","OPTIC","ORBIT","ORDER","ORGAN","OTHER","OTTER","OUTDO","OUTER","OVERT","OVINE","OXIDE","OZONE",
 // P
-      "PAINT", "PASTA", "PAVED", "PEARL", "PIANO", "PINKY", "PITCH", "PIVOT", "PIXEL", "PLACE", "PLANT", "PLAZA", "PLUCK", "PLUME", "PLUSH", "POINT", "POPPY", "POUCH", "POWER", "PRANK", "PRIDE", "PRIME", "PRINT", "PRISM", "PROUD", "PROWL", "PURGE", "PURSE", "PYGMY",
+"PANIC","PAINT","PAPER","PASTA","PATCH","PATIO","PAVED","PEACE","PEACH","PEARL","PEDAL","PENAL","PENCE","PENNY","PERIL","PHASE","PIANO","PILOT","PINKY","PINCH","PITCH","PIVOT","PIXEL","PLACE","PLAIN","PLANK","PLANT","PLATE","PLAZA","PLEAD","PLUCK","PLUME","PLUSH","POINT","POLAR","POLKA","POPPY","POUCH","POWER","PRANK","PRICE","PRIDE","PRIME","PRINT","PRIOR","PRISM","PROBE","PRONE","PROOF","PROUD","PROVE","PROWL","PSALM","PURGE","PURSE","PULSE","PUPIL","PUREE","PYGMY",
 // Q
-      "QUACK", "QUAIL", "QUARK", "QUASH", "QUEEN", "QUEUE", "QUEST", "QUICK", "QUIET", "QUILT", "QUIRK", "QUOTA", "QUOTE",
+"QUALM","QUACK","QUAIL","QUAKE","QUARK","QUASH","QUEEN","QUELL","QUEUE","QUEST","QUICK","QUIET","QUILL","QUILT","QUINT","QUIRK","QUITE","QUOTA","QUOTE",
 // R
-      "RACER", "RALLY", "RANGE", "RATES", "RAVEN", "REACH", "REACT", "READY", "REBEL", "RECAP", "REIGN", "RELAY", "RHYME", "RIDER", "RIGHT", "RIGID", "RINSE", "RISKY", "RIVER", "ROCKY", "ROUGE", "ROUND", "ROUSE", "ROVER", "RUMBA", "RUMOR", "RUSTY",
+"RABID","RADIO","RALLY","RANGE","RATES","RAVEN","RAISE","RAZOR","REACH","REACT","READY","REALM","REBEL","RECAP","REIGN","RELAY","REPLY","RESET","RHYME","RIDER","RIDGE","RIGHT","RIGID","RINSE","RISKY","RIVER","ROAST","ROBOT","ROCKY","ROGUE","ROUTE","ROUND","ROUSE","ROVER","ROYAL","RUGBY","RUMOR","RURAL","RUSTY",
 // S
-      "SCENT", "SCOOP", "SCOPE", "SCORE", "SCORN", "SHADE", "SHAPE", "SHEEP", "SHINY", "SHORE", "SHOUT", "SIGHT", "SKILL", "SLEEK", "SLEEP", "SLEET", "SLICK", "SLIDE", "SLOPE", "SNACK", "SNAKE", "SNEAK", "SNEER", "SOBER", "SOLID", "SPACE", "SPADE", "SPARK", "SPEAK", "SPEED", "SPEND", "SPICE", "SPIKE", "SPIKY", "SPILL", "SPILT", "SPINE", "SPITE", "SPLIT", "SPOOL", "SPORT", "SQUAD", "STARE", "STAND", "STEAL", "STEAM", "STING", "STONE", "STUCK", "SUGAR", "SUPER", "SWEEP", "SWING", "SWIRL", "SWORD", "SWUNG", "SYNTH",
+"SAFER","SAINT","SALAD","SALTY","SAUCE","SCARF","SCARY","SCENE","SCENT","SCOFF","SCOOP","SCOPE","SCORE","SCORN","SCOUT","SCRUB","SEIZE","SENSE","SHADE","SHAKE","SHAPE","SHARE","SHARP","SHAVE","SHEEP","SHELF","SHELL","SHINY","SHIRT","SHOCK","SHOOK","SHORE","SHORT","SHOUT","SHOVE","SHOWN","SHRUB","SHRUG","SIGHT","SILLY","SIREN","SKATE","SKILL","SKIRT","SKULL","SLEEK","SLEEP","SLEET","SLICK","SLIDE","SLIME","SLING","SLOPE","SLOTH","SMALL","SMART","SMELL","SMILE","SMOKE","SMOKY","SNACK","SNAIL","SNAKE","SNEAK","SNEER","SNIPE","SNOOP","SNUCK","SOBER","SOLAR","SOLID","SONAR","SORRY","SOUND","SOUTH","SPACE","SPADE","SPARE","SPARK","SPEAK","SPEAR","SPEED","SPELL","SPEND","SPICE","SPIKE","SPIKY","SPILL","SPILT","SPINE","SPITE","SPLIT","SPOIL","SPOKE","SPOOL","SPOON","SPORT","SQUAD","SQUID","STAGE","STAGE","STAFF","STAGE","STAGE","STAGE","STAND","STARE","START","STATE","STAKE","STALE","STALL","STEAL","STEAK","STEAM","STEEL","STEEP","STEER","STERN","STICK","STIFF","STILL","STING","STINK","STONE","STOLE","STOOL","STORM","STORY","STOVE","STRAW","STRAP","STRIP","STUDY","STUFF","STUMP","STYLE","SUGAR","SUITE","SUNNY","SUPER","SURGE","SWEEP","SWEAR","SWEAT","SWEET","SWELL","SWIFT","SWING","SWIRL","SWOOP","SWORD","SWUNG","SWEPT","SYRUP","SYNTH",
 // T
-      "TABLE", "TALON", "TALES", "TANGO", "TENSE", "THANK", "THINK", "THIRD", "THORN", "THUMB", "TIGER", "TIMER", "TOAST", "TORCH", "TOUGH", "TOWEL", "TRACE", "TRACK", "TRAIL", "TREAD", "TREAT", "TREND", "TROPE","TRUST", "TWINE", "TWIST", "TWIRL", "TYPED", "TYPIC",
+"TABLE","TAKEN","TALON","TALES","TANGO","TASTE","TENSE","THANK","THAT'S","THIEF","THICK","THIRD","THORN","THOSE","THREE","THREW","THINK","THING","TITLE","TIGHT","THROW","THUMB","TIGER","TIMER","TODAY","TOTAL","TOAST","TORCH","TOUCH","TOUGH","TOWER","TOWEL","TRACE","TRACK","TRAIL","TRASH","TRUCK","TRUNK","TREAD","TREAT","TREND","TRULY","TROPE","TRUST","TWINE","TWINS","TWIRL","TWIST","TYPED","TYPIC",
 // U
-      "ULTRA", "UNDER", "UNFIT", "UNIFY", "UNITE", "UNITY", "UNZIP", "UPEND", "UPPER", "UPSET", "URBAN", "URGED", "USAGE", "USHER", "USUAL", "USING", "UTTER",
+"ULCER","ULTRA","UNCLE","UNDER","UNFIT","UNIFY","UNION","UNITE","UNITY","UNTIE","UNTIL","UNZIP","UPEND","UPPER","UPSET","URBAN","URGED","USAGE","USERS","USHER","USUAL","USING","UTTER",
 // V
-      "VAGUE", "VALUE", "VAPID", "VAPOR", "VAULT", "VAUNT", "VENOM", "VICES", "VIGOR", "VILLA", "VISTA", "VITAL", "VIVID", "VIXEN", "VOCAL", "VOTER", "VOWED", "VOWEL",
-// W
-      "WAGER", "WAGON", "WASTE", "WATER", "WAVER", "WEARY", "WHACK", "WHALE", "WHEAT", "WHINE", "WHIRL", "WHISK", "WIDEN", "WINCE", "WITTY", "WOOZY", "WOUND", "WOVEN", "WRIST", "WROTE", "WRUNG", 
-// X
-      "XENON",
+"VALID","VALUE","VALVE","VAPID","VAPOR","VAULT","VAUNT","VENOM","VENUE","VERSE","VERGE","VICES","VIGOR","VILLA","VINYL","VIRAL","VISTA","VITAL","VIVID","VIXEN","VOCAL","VODKA","VOTER","VOWED","VOWEL",
+
+"WAGER","WAGON","WAIST","WALTZ","WASTE","WATER","WAVER","WEARY","WEIGH","WEIRD","WHACK","WHALE","WHEAT","WHILE","WHINE","WHIRL","WHISK","WHITE","WHOLE","WHOSE","WIDEN","WIDTH","WINCE","WINDY","WITTY","WOMAN","WORRY","WORSE","WORST","WORTH","WORLD","WOOZY","WOUND","WOVEN","WRITE","WRIST","WROTE","WRONG","WRUNG",
+
+"XENIA","XENON","XYSTI",
 // Y
-      "YACHT", "YAWNS", "YEARN", "YEAST", "YIELD", "YIKES", "YODEL", "YOKEL", "YOUNG", "YOUTH", "YOWLS", "YUMMY",
+"YACHT","YARNS","YAWNS","YEARN","YEAST","YELLS","YIELD","YIKES","YODEL","YOKEL","YOUNG","YOURS","YOUTH","YOWLS","YUMMY",
 // Z
-      "ZAPPY", "ZEBRA", "ZESTS", "ZESTY", "ZILCH", "ZINGY", "ZINGS", "ZIPPY", "ZONAL", "ZONED", "ZONES"
-]
+"ZAPPY","ZEBRA","ZEBUS","ZESTS","ZESTY","ZILCH","ZINGY","ZINGS","ZIPPER","ZIPPY","ZONAL","ZONED","ZONES","ZONER","ZORRO"
+];
 
+// --------------------------- Plural filtering ---------------------------
+// Words we *keep* even though they end with 'S' (clear singulars).
+const NON_PLURAL_SINGULARS = new Set([
+  'ABYSS','CLASS','GRASS','CHAOS'
+]);
 
+function isLikelyPlural(word) {
+  // Always keep obvious singulars ending with S
+  if (NON_PLURAL_SINGULARS.has(word)) return false;
+
+  // Keep words ending with 'SS' (e.g., GLASS) — but you can later whitelist instead.
+  if (word.endsWith('SS')) return false;
+
+  // -IES plural (e.g., TRIES -> TRY)
+  if (word.endsWith('IES')) return true;
+
+  // -ES after sibilants (boxes, buses, quizzes, churches, dishes)
+  if (/(S|X|Z|CH|SH)ES$/.test(word)) return true;
+
+  // Generic trailing -S (likely plural or 3rd person verb) -> exclude
+  if (word.endsWith('S')) return true;
+
+  return false;
+}
+
+// --------------------------- Normalisation ---------------------------
+function normaliseList(arr) {
+  const out = [];
+  const seen = new Set();
+  for (const raw of arr || []) {
+    const w = String(raw).trim().toUpperCase();
+    if (w.length !== WORD_LEN) continue;
+    if (!/^[A-Z]+$/.test(w)) continue;
+    if (!seen.has(w)) { seen.add(w); out.push(w); }
+  }
+  return out;
+}
+
+// Build solution list from allowed, excluding likely plurals.
+function buildAutoSolutions(fromAllowed) {
+  const out = [];
+  for (const w of fromAllowed) {
+    if (!isLikelyPlural(w)) out.push(w);
+  }
+  return out;
+}
+
+function buildLexicon({ allowed }) {
+  const ALLOWED = normaliseList(allowed);
+  const autoSolutions = buildAutoSolutions(ALLOWED);
+  // Ensure every solution is also guessable (already true here)
+  const SOLUTIONS = normaliseList(autoSolutions);
+  const ALLOWED_SET = new Set(ALLOWED);
+  return { SOLUTIONS, ALLOWED, ALLOWED_SET };
+}
+
+// --------------------------- Lint (console) ---------------------------
+function lintList(name, arr) {
+  const issues = { wrongLen:[], nonAlpha:[], dups:[] };
+  const seen = new Set();
+  for (const raw of arr || []) {
+    const w = String(raw).trim().toUpperCase();
+    if (w.length !== WORD_LEN) issues.wrongLen.push(w);
+    if (!/^[A-Z]+$/.test(w)) issues.nonAlpha.push(w);
+    if (seen.has(w)) issues.dups.push(w);
+    seen.add(w);
+  }
+  if (issues.wrongLen.length || issues.nonAlpha.length || issues.dups.length) {
+    console.group(`Word list issues in ${name}`);
+    if (issues.wrongLen.length) console.warn('Wrong length:', issues.wrongLen.slice(0,20), `(+${Math.max(0, issues.wrongLen.length-20)} more)`);
+    if (issues.nonAlpha.length) console.warn('Non-alpha:', issues.nonAlpha.slice(0,20), `(+${Math.max(0, issues.nonAlpha.length-20)} more)`);
+    if (issues.dups.length) console.warn('Duplicates:', issues.dups.slice(0,20), `(+${Math.max(0, issues.dups.length-20)} more)`);
+    console.groupEnd();
+  } else {
+    console.info(`${name}: ${arr?.length ?? 0} entries, no issues ✅`);
+  }
+}
+
+// Lint raw list
+lintList('allowedGuesses (raw)', allowedGuesses);
+
+// Build final, cleaned lexicon and expose it
+const { SOLUTIONS, ALLOWED, ALLOWED_SET } = buildLexicon({
+  allowed: allowedGuesses
+});
+
+window.allowedGuesses = allowedGuesses;   // raw
+window.solutionList   = SOLUTIONS;        // auto-filtered
+window.ALLOWED        = ALLOWED;          // cleaned allowed list
+window.SOLUTIONS      = SOLUTIONS;        // cleaned solution list
+window.ALLOWED_SET    = ALLOWED_SET;      // fast lookup
+
+// --------------------------- Helpers ---------------------------
+// Random solution (practice mode)
+function pickRandomSolution() {
+  if (!SOLUTIONS.length) return '';
+  const i = Math.floor(Math.random() * SOLUTIONS.length);
+  return SOLUTIONS[i];
+}
+
+// Deterministic daily solution based on date (+salt)
+function solutionForDate(date = new Date(), salt = DAILY_SALT) {
+  if (!SOLUTIONS.length) return '';
+  const epoch = new Date(DAILY_EPOCH_ISO);
+  const dayIndex = Math.floor((date - epoch) / 86400000);
+  return SOLUTIONS[(dayIndex + salt) % SOLUTIONS.length];
+}
+
+window.pickRandomSolution = pickRandomSolution;
+window.solutionForDate = solutionForDate;
+
+// Friendly startup logs
+console.info(`Lexicon ready: ${SOLUTIONS.length} solutions (plurals excluded) | ${ALLOWED.length} allowed guesses.`);
