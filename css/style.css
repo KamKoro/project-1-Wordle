@@ -1,53 +1,172 @@
+/* === CSS Variables === */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --text-secondary: #000000;
+  --tile-bg: #ffffff;
+  --tile-border: #d3d6da;
+  --keyboard-bg: #d3d6da;
+  --keyboard-hover: #818384;
+  --divider-color: #d3d6da;
+  --toast-bg: #000000;
+  --toast-text: #ffffff;
+}
+
+body.dark-mode,
+html.dark-mode {
+  --bg-color: #121213;
+  --text-color: #ffffff;
+  --text-secondary: #ffffff;
+  --tile-bg: #121213;
+  --tile-border: #3a3a3c;
+  --keyboard-bg: #818384;
+  --keyboard-hover: #565758;
+  --divider-color: #3a3a3c;
+  --toast-bg: #ffffff;
+  --toast-text: #000000;
+}
+
 /* === Base Styles === */
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 400;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
   margin: 0;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  background-color: #f2f2f2; /* Soft light gray for better contrast */
-  padding: 10px 20px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  padding: 0;
   box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Theme Toggle Button === */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  border: 2px solid var(--tile-border);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  user-select: none;
+}
+
+.theme-toggle:hover {
+  background-color: var(--keyboard-hover);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle:focus {
+  outline: 3px solid var(--text-color);
+  outline-offset: 2px;
+}
+
+.theme-icon {
+  display: inline-block;
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+
+/* === Title === */
+.navbar-title {
+  margin: 0;
+  padding: 16px 0 8px 0;
+  color: var(--text-color);
+  font-size: 37px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  transition: color 0.3s ease;
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  border-bottom: 1px solid var(--divider-color);
 }
 
 h1 {
-  margin: 1px 0 10px;
-  color: #111; /* Darker text for better contrast */
-  font-size: 27px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+  font-size: 37px;
   text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  transition: color 0.3s ease;
 }
 
 h2, h3, p {
-  color: #222;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
+
+h2 {
+  font-size: 16px;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+h3 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+p {
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .content {
-  max-width: 800px;
+  max-width: 500px;
   width: 100%;
-  margin-top: 60px;
-  margin-left: 0;
-  padding-left: 5px;
-  align-self: flex-start;
+  margin: 0 auto;
+  padding: 0 20px 40px 20px;
   text-align: left;
+  font-weight: 400;
 }
 
 .title-divider {
-  width: 100%;
-  max-width: 800px;
-  border: none;
-  border-top: 1px solid #ccc;
-  margin: 5px auto 12px;
+  display: none;
 }
 
 .footer-divider {
   width: 100%;
-  max-width: 800px;
+  max-width: 500px;
   border: none;
-  border-top: 1px solid #ccc;
-  margin: 60px auto 25px; 
+  border-top: 1px solid var(--divider-color);
+  margin: 40px auto 20px;
+  transition: border-color 0.3s ease;
 }
 
 
@@ -55,170 +174,208 @@ h2, h3, p {
 #game-board {
   display: grid;
   grid-template-rows: repeat(6, 1fr);
-  gap: 6px;
-  margin: 4px 0; 
+  gap: 5px;
+  margin: 29px auto 0 auto;
+  width: 100%;
+  max-width: 350px;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  gap: 5px;
+  width: 100%;
 }
 
 /* === Tiles === */
 .tile {
-  width: 55px;
-  height: 55px;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 62px;
+  min-width: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 38px;
-  font-weight: bold;
+  font-size: clamp(28px, 6vw, 36px);
+  font-weight: 700;
   text-transform: uppercase;
-  background-color: white;
-  border: 2px solid #ccc;
-  color: #111;
-  transition: transform 0.2s ease, background-color 0.3s ease;
+  background-color: var(--tile-bg);
+  border: 2px solid var(--tile-border);
+  color: var(--text-color);
+  transition: all 0.15s ease-in-out;
+  box-sizing: border-box;
+  user-select: none;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1;
 }
 
 .tile.correct {
-  background-color: #217346;
-  border-color: #217346;
-  color: white;
+  background-color: #6aaa64;
+  border-color: #6aaa64;
+  color: #ffffff;
+  animation: flip 0.3s ease-in-out;
 }
 
 .tile.present {
-  background-color: #c9a500;
-  border-color: #c9a500;
-  color: white;
+  background-color: #c9b458;
+  border-color: #c9b458;
+  color: #ffffff;
+  animation: flip 0.3s ease-in-out;
 }
 
 .tile.absent {
-  background-color: #555;
-  border-color: #555;
-  color: white;
+  background-color: #787c7e;
+  border-color: #787c7e;
+  color: #ffffff;
+  animation: flip 0.3s ease-in-out;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
 }
 
 /* === Keyboard === */
 #keyboard {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   user-select: none;
-  margin-top: 60px;
-  margin-bottom: 51px;
+  margin: 30px auto 20px auto;
+  width: 100%;
+  max-width: 500px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 #keyboard .row {
   display: flex;
   justify-content: center;
   gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 auto;
 }
 
 #keyboard button {
-  background-color: white;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  padding: 14px;
-  min-height: 55px;
-  min-width: 40px;
+  background-color: var(--keyboard-bg);
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+  height: 58px;
+  min-width: 43px;
+  flex: 1 1 auto;
+  max-width: 43px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 15px;
-  font-weight: bold;
-  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
   cursor: pointer;
   text-transform: uppercase;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-#keyboard button.correct {
-  background-color: #217346;
-  border-color: #217346;
-  color: white;
-}
-
-#keyboard button.present {
-  background-color: #c9a500;
-  border-color: #c9a500;
-  color: white;
-}
-
-#keyboard button.absent {
-  background-color: #555;
-  border-color: #555;
-  color: white;
-}
-
-#keyboard button:hover {
-  background-color: #999; /* Darker hover state */
+  transition: background-color 0.15s ease-in-out;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 #keyboard button:focus {
-  outline: 3px solid #FF6347; /* High contrast focus outline */
+  outline: 2px solid var(--text-color);
+  outline-offset: 2px;
+}
+
+#keyboard button.enter,
+#keyboard button.backspace {
+  flex: 1.5 1 auto;
+  min-width: 65px;
+  max-width: 65px;
+  font-size: 12px;
+}
+
+#keyboard button.correct {
+  background-color: #6aaa64;
+  color: #ffffff;
+}
+
+#keyboard button.present {
+  background-color: #c9b458;
+  color: #ffffff;
+}
+
+#keyboard button.absent {
+  background-color: #787c7e;
+  color: #ffffff;
+}
+
+#keyboard button:hover:not(.correct):not(.present):not(.absent) {
+  background-color: var(--keyboard-hover);
+}
+
+#keyboard button:active {
+  transform: scale(0.95);
 }
 
 /* === Play Again Button === */
 #play-again-container {
-  display: none;
-  margin-top: 5px;
+  margin: 20px auto 10px auto;
   display: flex;
   justify-content: center;
+  max-width: 500px;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .play-again-button {
-  background-color: #217346;
-  color: white;
+  background-color: #6aaa64;
+  color: #ffffff;
   padding: 12px 24px;
-  font-size: 18px;
-  font-weight: bold;
-  border: 2px solid #ccc;
-  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.play-again-button.correct {
-  background-color: #217346;
-  border-color: #217346;
-  color: white;
-}
-
-.play-again-button.present {
-  background-color: #c9a500;
-  border-color: #c9a500;
-  color: white;
-}
-
-.play-again-button.absent {
-  background-color: #555;
-  border-color: #555;
-  color: white;
+  transition: background-color 0.15s ease-in-out;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 .play-again-button:hover {
-  background-color: #999; /* Darker hover state */
+  background-color: #5a9a54;
+}
+
+.play-again-button:active {
+  transform: scale(0.98);
 }
 
 .play-again-button:focus {
-  outline: 3px solid #FF6347; /* High contrast focus outline */
+  outline: 2px solid #6aaa64;
+  outline-offset: 2px;
 }
 
 .example {
-  margin-bottom: 24px;
+  margin-bottom: clamp(20px, 4vw, 28px);
+  padding: 12px 0;
 }
 
 .example-row {
   display: flex;
-  gap: 6px;
+  gap: clamp(3px, 0.8vw, 4px);
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .example-row .tile {
-  width: 40px;
-  height: 40px;
-  font-size: 24px;
+  width: clamp(30px, 8vw, 40px);
+  height: clamp(30px, 8vw, 40px);
+  max-width: 40px;
+  font-size: clamp(18px, 4.5vw, 24px);
   border-width: 1.5px;
 }
 
@@ -226,19 +383,188 @@ h2, h3, p {
 .toast {
   position: fixed;
   top: 30px;
-  left: 30px;
-  background-color: #222;
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--toast-bg);
+  color: var(--toast-text);
+  padding: 16px 32px;
+  border-radius: 4px;
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.3s ease-in-out, background-color 0.3s ease, color 0.3s ease;
+  max-width: 90%;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 .toast.show {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* === Media Queries === */
+
+/* Small mobile devices (up to 360px) */
+@media (max-width: 360px) {
+  body {
+    padding: 8px 10px;
+  }
+  
+  .navbar-title {
+    font-size: 28px;
+  }
+  
+  .theme-toggle {
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+  
+  .theme-icon {
+    font-size: 20px;
+  }
+  
+  #game-board {
+    max-width: 100%;
+    gap: 4px;
+  }
+  
+  .row {
+    gap: 4px;
+  }
+  
+  .tile {
+    min-width: 35px;
+    font-size: 24px;
+    border-width: 1.5px;
+  }
+  
+  #keyboard {
+    max-width: 100%;
+    gap: 6px;
+  }
+  
+  #keyboard .row {
+    gap: 4px;
+  }
+  
+  #keyboard button {
+    min-width: 28px;
+    height: 48px;
+    font-size: 11px;
+  }
+  
+  #keyboard button.enter,
+  #keyboard button.backspace {
+    min-width: 50px;
+    max-width: 50px;
+  }
+  
+  .example-row .tile {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+}
+
+/* Mobile devices (361px to 480px) */
+@media (min-width: 361px) and (max-width: 480px) {
+  .navbar-title {
+    font-size: 32px;
+  }
+  
+  .theme-toggle {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+  
+  .theme-icon {
+    font-size: 22px;
+  }
+  
+  #game-board {
+    max-width: 100%;
+  }
+  
+  .tile {
+    min-width: 40px;
+    max-width: 50px;
+  }
+  
+  #keyboard {
+    max-width: 100%;
+  }
+  
+  #keyboard button {
+    min-width: 32px;
+    height: 52px;
+    font-size: 12px;
+  }
+  
+  #keyboard button.enter,
+  #keyboard button.backspace {
+    min-width: 58px;
+    max-width: 58px;
+  }
+}
+
+/* Tablets (481px to 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  #game-board {
+    max-width: 400px;
+  }
+  
+  .tile {
+    max-width: 58px;
+  }
+  
+  #keyboard {
+    max-width: 480px;
+  }
+  
+  #keyboard button {
+    max-width: 40px;
+    height: 56px;
+  }
+  
+  #keyboard button.enter,
+  #keyboard button.backspace {
+    max-width: 62px;
+  }
+}
+
+/* Large tablets and small desktops (769px to 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #game-board {
+    max-width: 350px;
+  }
+  
+  .tile {
+    max-width: 60px;
+  }
+  
+  #keyboard {
+    max-width: 500px;
+  }
+}
+
+/* Large screens (1025px and above) */
+@media (min-width: 1025px) {
+  #game-board {
+    max-width: 350px;
+  }
+  
+  .tile {
+    max-width: 62px;
+  }
+  
+  #keyboard {
+    max-width: 500px;
+  }
 }

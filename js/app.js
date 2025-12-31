@@ -13,6 +13,83 @@ window.addEventListener('DOMContentLoaded', () => {
   const keyboard = document.getElementById('keyboard');
   const playAgainContainer = document.getElementById('play-again-container');
   const playAgainButton = document.getElementById('play-again');
+  const themeToggle = document.getElementById('theme-toggle');
+
+  // === Theme Toggle Functionality === //
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
+    }
+    updateThemeIcon();
+  }
+
+  function updateThemeIcon() {
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+      themeIcon.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    }
+  }
+
+  function toggleTheme(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('toggleTheme called');
+    console.log('Before toggle - has dark-mode:', document.body.classList.contains('dark-mode'));
+    
+    // Toggle on both html and body for maximum compatibility
+    document.documentElement.classList.toggle('dark-mode');
+    document.body.classList.toggle('dark-mode');
+    
+    const isDark = document.body.classList.contains('dark-mode');
+    console.log('After toggle - has dark-mode:', isDark);
+    console.log('Body classes:', document.body.className);
+    console.log('HTML classes:', document.documentElement.className);
+    
+    // Check computed styles
+    const computedBg = window.getComputedStyle(document.body).backgroundColor;
+    const computedColor = window.getComputedStyle(document.body).color;
+    console.log('Computed background:', computedBg);
+    console.log('Computed color:', computedColor);
+    
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeIcon();
+    console.log('Theme toggled to:', isDark ? 'dark' : 'light');
+    
+    // Force a repaint to ensure CSS updates
+    document.body.offsetHeight;
+  }
+
+  // Initialize theme on page load
+  initTheme();
+  
+  // Make toggleTheme available globally for onclick fallback
+  window.toggleThemeManual = function() {
+    console.log('Manual toggle called');
+    toggleTheme();
+  };
+
+  // Attach event listener to theme toggle button
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+    console.log('Theme toggle button found and listener attached');
+  } else {
+    console.error('Theme toggle button not found');
+  }
+  
+  // Test function to manually toggle theme
+  window.testTheme = function() {
+    console.log('Testing theme toggle...');
+    document.body.classList.toggle('dark-mode');
+    console.log('Dark mode:', document.body.classList.contains('dark-mode'));
+    console.log('Computed background:', window.getComputedStyle(document.body).backgroundColor);
+    console.log('Computed color:', window.getComputedStyle(document.body).color);
+  };
 
   // === Functions === //
   function initializeGame() {
