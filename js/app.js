@@ -6,30 +6,31 @@ window.addEventListener('DOMContentLoaded', () => {
   // === Variables === //
   let currentRow = 0;
   let currentGuess = '';
-  let hiddenWord = '';
+  let answerWord = '';
 
   // === Cached Element References === //
   const board = document.getElementById('game-board');
   const keyboard = document.getElementById('keyboard');
   const playAgainContainer = document.getElementById('play-again-container');
   const playAgainButton = document.getElementById('play-again');
+  const darkModeToggle = document.getElementById('dark-mode-toggle');
 
   // === Functions === //
   function initializeGame() {
-    if (!window.wordList || wordList.length === 0) {
-      window.wordList = [];
+    if (!window.allowedWords || allowedWords.length === 0) {
+      window.allowedWords = [];
     }
     currentRow = 0;
     currentGuess = '';
     playAgainContainer.style.display = 'none';
-    createBoard();
+    renderBoard();
     setupKeyboard();
-    chooseHiddenWord();
+    pickAnswerWord();
   }
 
   // Create the game board
   // Each row will contain the same number of tiles as the word length
-  function createBoard() {
+  function renderBoard() {
     board.innerHTML = '';
     for (let row = 0; row < maxAttempts; row++) {
       const rowElement = document.createElement('div');
@@ -43,11 +44,33 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Choose a random word from the word list
-  function chooseHiddenWord() {
-    const index = Math.floor(Math.random() * wordList.length);
-    hiddenWord = wordList[index].toUpperCase();
-    console.log('The hidden word is:', hiddenWord);
+  // Check if a word is a plural (Wordle does not use plurals as answers)
+  function isPluralAnswer(word) {
+    const irregularPlurals = new Set(['GEESE', 'TEETH', 'KNEES', 'FEET']);
+
+    if (irregularPlurals.has(word)) return true;
+    if (word.endsWith('ES')) return true;
+
+    if (word.endsWith('S') && !word.endsWith('SS')) {
+      const nonPluralSuffixes = /(US|IS|OS|AS|NS)$/;
+      return !nonPluralSuffixes.test(word);
+    }
+
+    return false;
+  }
+
+  // Get words that are allowed to be chosen as the answer
+  function getAnswerPool() {
+    const source = window.answerWords && answerWords.length > 0 ? answerWords : allowedWords;
+    return source.filter(word => !isPluralAnswer(word));
+  }
+
+  // Choose a random word from the answer list (common words, like real Wordle)
+  function pickAnswerWord() {
+    const answers = getAnswerPool();
+    const index = Math.floor(Math.random() * answers.length);
+    answerWord = answers[index].toUpperCase();
+    console.log('The answer word is:', answerWord);
   }
 
   // Set up the keyboard layout
@@ -69,7 +92,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle keyboard input
-  function handleInput(key) {
+  function handleKeyInput(key) {
     key = key.toUpperCase();
 
     // Handle special keys
@@ -83,11 +106,11 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // Update the current row with the current guess
-    updateCurrentTiles();
+    renderCurrentGuessRow();
   }
 
   // Update the current tiles in the current row
-  function updateCurrentTiles() {
+  function renderCurrentGuessRow() {
     const row = board.children[currentRow];
     for (let i = 0; i < wordLength; i++) {
       const tile = row.children[i];
@@ -117,30 +140,30 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // Check if the guess is in the word list
-    if (!wordList.includes(guess)) {
+    if (!allowedWords.includes(guess)) {
       showToast('Not in word list.');
       return;
     }
 
     // Check if the guess is correct
     const row = board.children[currentRow];
-    const secretCopy = hiddenWord.split('');
-    const tileStates = Array(wordLength).fill('absent');
+    const remainingAnswerLetters = answerWord.split('');
+    const letterStates = Array(wordLength).fill('absent');
 
     for (let i = 0; i < wordLength; i++) {
-      if (guess[i] === hiddenWord[i]) {
-        tileStates[i] = 'correct';
-        secretCopy[i] = null;
+      if (guess[i] === answerWord[i]) {
+        letterStates[i] = 'correct';
+        remainingAnswerLetters[i] = null;
       }
     }
 
     // Check for present letters
-    for (let i = 0; i < wordLength; i++) {
-      if (tileStates[i] === 'correct') continue;
-      const idx = secretCopy.indexOf(guess[i]);
-      if (idx !== -1) {
-        tileStates[i] = 'present';
-        secretCopy[idx] = null;
+    for (let i = 0; i < wordLength; i++) { // Loop through the word length
+      if (letterStates[i] === 'correct') continue; // If the tile state is correct, continue to the next iteration
+      const idx = remainingAnswerLetters.indexOf(guess[i]); // Get the index of the guess letter in the secret copy
+      if (idx !== -1) { // If the index is not -1, add the present class to the tile state
+        letterStates[i] = 'present';
+        remainingAnswerLetters[idx] = null; // Set the index of the guess letter in the secret copy to null
       }
     }
 
@@ -154,19 +177,19 @@ window.addEventListener('DOMContentLoaded', () => {
         tile.style.transform = 'rotateX(90deg)';
         setTimeout(() => {
           tile.textContent = letter;
-          tile.classList.add(tileStates[i]);
+          tile.classList.add(letterStates[i]);
           tile.style.transform = 'rotateX(0deg)';
         }, 150);
       }, i * 300);
     }
 
     // Update the keyboard states
-    updateKeyboardStates(guess, tileStates);
+    updateKeyboardStates(guess, letterStates);
 
-    if (guess === hiddenWord) {
+    if (guess === answerWord) {
       setTimeout(() => {
         showToast('You win!');
-        showPlayAgain();
+        showPlayAgainButton();
       }, wordLength * 300 + 300);
       return;
     }
@@ -175,42 +198,57 @@ window.addEventListener('DOMContentLoaded', () => {
     currentRow++;
     currentGuess = '';
 
-    if (currentRow >= maxAttempts) { 
+    if (currentRow >= maxAttempts) {
       setTimeout(() => {
-        showToast(`Game over! The word was ${hiddenWord}`);
-        showPlayAgain();
+        showToast(`Game over! The word was ${answerWord}`);
+        showPlayAgainButton();
       }, wordLength * 300 + 300); // Show the play again button after the last guess
     } else {
-      updateCurrentTiles();
+      renderCurrentGuessRow(); // Update the current tiles in the current row
     }
   }
 
   // Update the keyboard states based on the guess
-  function updateKeyboardStates(guess, tileStates) {
+  function updateKeyboardStates(guess, letterStates) {
     guess.split('').forEach((letter, i) => {
       const keyButton = keyboard.querySelector(`[data-key="${letter}"]`);
       if (!keyButton) return;
 
-      if (tileStates[i] === 'correct') {
+      if (letterStates[i] === 'correct') { // Add the correct class to the key button
         keyButton.classList.add('correct');
-      } else if (tileStates[i] === 'present') {
+      } else if (letterStates[i] === 'present') { // Add the present class to the key button
         keyButton.classList.add('present');
-      } else {
+      } else { // Add the absent class to the key button
         keyButton.classList.add('absent');
       }
-    });
+    }); // End of forEach loop
   }
 
   // Show the play again button
-  function showPlayAgain() {
+  function showPlayAgainButton() {
     playAgainContainer.style.display = 'block';
+  }
+
+  // Apply saved theme preference on load
+  function initializeDarkMode() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  }
+
+  // Toggle between light and dark mode
+  function toggleDarkMode() {
+    document.documentElement.classList.toggle('dark');
+    const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
   }
 
   // === Event Listeners ===
   // Handle keyboard input
   document.addEventListener('keydown', (e) => {
     if (/^[a-zA-Z]$/.test(e.key) || e.key === 'Backspace' || e.key === 'Enter') {
-      handleInput(e.key);
+      handleKeyInput(e.key);
       e.preventDefault();
     }
   });
@@ -218,13 +256,17 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle keyboard button clicks
   keyboard.addEventListener('click', (e) => {
     if (e.target.matches('.key')) {
-      handleInput(e.target.dataset.key);
+      handleKeyInput(e.target.dataset.key);
     }
   });
 
   // Handle play again button click
   playAgainButton.addEventListener('click', initializeGame);
 
+  // Handle dark mode toggle click
+  darkModeToggle.addEventListener('click', toggleDarkMode);
+
   // === Initialization === //
+  initializeDarkMode();
   initializeGame();
 });
