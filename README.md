@@ -1,106 +1,117 @@
 # Wordle
 
-A web-based implementation of the popular word puzzle game Wordle. Guess the hidden 5-letter word within six attempts using color-coded feedback.
+A browser-based Wordle clone built with vanilla HTML, CSS, and JavaScript. Players have six attempts to guess a hidden five-letter word, with tile and keyboard feedback after each submission.
 
 ![Wordle Screenshot](https://github.com/user-attachments/assets/f59dbbf4-8ee7-406d-9e77-b0d68deb3d90)
 
-## About
+## Overview
 
-Wordle is a word puzzle game that challenges players to correctly guess a five-letter word within six attempts. Originally created by software engineer Josh Wardle before being acquired by the New York Times (the name of the game being a play on Josh's surname), Wordle gained immense popularity and spawned several spinoffs in multiple languages and formats.
+This project recreates the core Wordle experience in a lightweight, dependency-free web application. It includes NYT-style word lists, answer validation, responsive layout, and a persistent dark mode.
 
-This project is a faithful recreation of the classic Wordle game with a clean, modern interface that closely matches the New York Times version.
+Wordle was originally created by Josh Wardle and later acquired by [The New York Times](https://www.nytimes.com/games/wordle). This repository is an independent educational implementation and is not affiliated with or endorsed by The New York Times.
 
 ## Features
 
-- 🎮 **Classic Wordle Gameplay** - Guess 5-letter words with 6 attempts
-- 🎨 **Dark Mode Toggle** - Switch between light and dark themes
-- ⌨️ **Dual Input Methods** - Use your physical keyboard or on-screen virtual keyboard
-- 🎯 **Color-Coded Feedback** - Visual indicators for correct letters, misplaced letters, and incorrect letters
-- 💾 **Persistent Preferences** - Theme selection saved in browser localStorage
-- 📱 **Responsive Design** - Optimized for desktop, tablet, and mobile devices
-- ✨ **Smooth Animations** - Polished tile flip animations and transitions
+- **Standard Wordle rules** — Six guesses, five-letter words, color-coded feedback
+- **Curated lexicon** — ~2,300 solution words and ~13,000 allowed guesses, with plural answers excluded
+- **Physical and on-screen keyboard support** — Type directly or use the virtual keyboard
+- **Tile flip animations and invalid-guess shake feedback**
+- **Keyboard state tracking** — Key colors update and never downgrade within a game
+- **Dark mode** — Toggle in the header; preference saved to `localStorage`
+- **Responsive layout** — Usable on mobile, tablet, and desktop viewports
+- **Accessibility considerations** — Focus styles and reduced-motion support
 
-## Technologies Used
+## Tech Stack
 
-- **HTML5** - Semantic markup and structure
-- **CSS3** - Modern styling with CSS variables, flexbox, and grid
-- **JavaScript (ES6+)** - Game logic and interactivity
+| Layer | Technologies |
+| --- | --- |
+| Markup | HTML5 |
+| Styling | CSS3 (custom properties, Grid, Flexbox, media queries) |
+| Logic | JavaScript (ES6+) |
 
-## How to Play
-
-1. Start by typing a 5-letter word guess
-2. Press Enter or click the Enter button to submit your guess
-3. Tiles will change color to provide feedback:
-   - 🟩 **Green** - Letter is in the word and in the correct position
-   - 🟨 **Yellow** - Letter is in the word but in the wrong position
-   - ⬜ **Gray** - Letter is not in the word
-4. Use the feedback to refine your next guess
-5. Try to guess the word within 6 attempts!
+No frameworks, build tools, or package managers are required to run the game.
 
 ## Getting Started
 
-### Prerequisites
+### Requirements
 
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- A local web server (optional, for development)
+- A modern browser (Chrome, Firefox, Safari, or Edge)
 
-### Installation
+### Run locally
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd project-1-Wordle
-   ```
+**Option 1 — Open directly**
 
-2. Open the project in your browser:
-   - **Option 1**: Simply open `index.html` in your browser
-   - **Option 2**: Use a local server:
-     ```bash
-     npx serve -l 3000
-     ```
-     Then navigate to `http://localhost:3000`
+Open `index.html` in your browser.
+
+**Option 2 — Local server (recommended)**
+
+```bash
+git clone https://github.com/KamKoro/project-1-Wordle.git
+cd project-1-Wordle
+npx serve -l 3000
+```
+
+Then visit `http://localhost:3000`.
+
+## How to Play
+
+1. Enter a five-letter word using your keyboard or the on-screen keys.
+2. Press **Enter** to submit the guess.
+3. Review the tile colors:
+   - **Green** — correct letter, correct position
+   - **Yellow** — correct letter, wrong position
+   - **Gray** — letter not in the word
+4. Repeat until you solve the word or use all six guesses.
+5. Click **Play Again!** to start a new game with a different answer.
+
+Each new game selects a random word from the solution list. Plural words are not used as answers.
 
 ## Project Structure
 
 ```
 project-1-Wordle/
-├── index.html          # Main HTML file
+├── index.html           # Application shell and in-page instructions
 ├── css/
-│   └── style.css       # Stylesheet with responsive design and dark mode
+│   └── style.css        # Theme variables, layout, responsive styles
 ├── js/
-│   ├── app.js          # Main game logic and interactivity
-│   └── data.js         # Word list database
-└── README.md           # Project documentation
+│   ├── app.js           # Game state, input handling, UI updates
+│   ├── data.js          # Word lists and lexicon utilities
+│   └── partials.js      # Optional HTML partial loader
+├── partials/
+│   └── navbar.html      # Optional navbar partial (not currently wired in)
+└── README.md
 ```
 
-## Features in Detail
+## Architecture Notes
 
-### Dark Mode
-Toggle between light and dark themes using the button in the top-right corner. Your preference is automatically saved and will persist across sessions.
+### Word lists (`js/data.js`)
 
-### Responsive Design
-The game adapts seamlessly to different screen sizes, from mobile phones to large desktop displays, ensuring an optimal experience on any device.
+- `answerWords` — candidate solution words
+- `allowedWords` — valid guess dictionary
+- `ALLOWED_SET` — `Set` used for O(1) guess validation
+- `SOLUTIONS` — normalized solution pool with plural filtering applied
+- `pickRandomSolution()` — selects a random answer for each new game
 
-### Word Validation
-Only valid 5-letter words from the game's dictionary are accepted as guesses, ensuring fair gameplay.
+### Game logic (`js/app.js`)
 
-## Future Enhancements
+- Manages board rendering, guess evaluation, animations, and keyboard state
+- Blocks input while tile animations are in progress
+- Persists theme preference under the `theme` key in `localStorage`
 
-- [ ] Hard mode difficulty option
-- [ ] Expanded word list
-- [ ] Statistics tracking
-- [ ] Share results feature
-- [ ] Daily challenge mode
+## Roadmap
+
+- [ ] Hard mode (revealed hints must be reused)
+- [ ] Statistics and win streak tracking
+- [ ] Shareable result grid
+- [ ] Optional daily word mode
+- [ ] Settings panel using navbar partials
 
 ## License
 
-This project is a recreation of Wordle for educational purposes.
+This project is provided for educational purposes.
 
 ## Acknowledgments
 
-- Original Wordle game created by Josh Wardle
-- Wordle is now owned and operated by The New York Times
-
----
-
-**Enjoy playing Wordle!** 🎉
+- [Josh Wardle](https://en.wikipedia.org/wiki/Josh_Wardle) — creator of Wordle
+- [The New York Times](https://www.nytimes.com/games/wordle) — current publisher of Wordle
+- Community-maintained Wordle word lists used as reference for the game dictionary
