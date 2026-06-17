@@ -19,7 +19,7 @@ Wordle was originally created by Josh Wardle and later acquired by [The New York
 - **Keyboard state tracking** — Key colors update and never downgrade within a game
 - **Dark mode** — Toggle in the header; preference saved to `localStorage`
 - **Responsive layout** — Usable on mobile, tablet, and desktop viewports
-- **Accessibility considerations** — Focus styles and reduced-motion support
+- **Accessibility considerations** — WCAG 2.1 AA contrast in light and dark modes, visible focus states, reduced-motion support, and screen-reader feedback for toasts
 
 ## Tech Stack
 

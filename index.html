@@ -26,14 +26,14 @@
     </header>
     <hr class="title-divider" />
 
-    <div id="game-board"></div>
-    <div id="keyboard" class="keyboard"></div>
+    <div id="game-board" aria-label="Game board"></div>
+    <div id="keyboard" class="keyboard" aria-label="Virtual keyboard"></div>
 
     <div id="play-again-container" style="display: none;">
       <button id="play-again" class="play-again-button">Play Again!</button>
     </div>
 
-    <div id="toast" class="toast">
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
       <div id="toast-message"></div>
     </div>
 
