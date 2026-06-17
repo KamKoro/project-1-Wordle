@@ -1,110 +1,101 @@
 window.addEventListener('DOMContentLoaded', () => {
   // === Constants === //
-  const wordLength = 5;
+  const wordLength = window.WORD_LEN || 5;
   const maxAttempts = 6;
+  const FLIP_MS = 300;
+  const STAGGER_MS = 300;
 
   // === Variables === //
   let currentRow = 0;
   let currentGuess = '';
-  let hiddenWord = '';
+  let answerWord = '';
+  let isAnimating = false;
+  let isGameOver = false;
 
-  // ===  Cached Element References === //
+  // === Cached Element References === //
   const board = document.getElementById('game-board');
   const keyboard = document.getElementById('keyboard');
   const playAgainContainer = document.getElementById('play-again-container');
   const playAgainButton = document.getElementById('play-again');
-  const themeToggle = document.getElementById('theme-toggle');
+  const darkModeToggle = document.getElementById('dark-mode-toggle');
 
-  // === Theme Toggle Functionality === //
-  function initTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      document.documentElement.classList.add('dark-mode');
-      document.body.classList.add('dark-mode');
+  // === Helpers === //
+  const allowedSet = window.ALLOWED_SET || new Set();
+
+  function pickSolution() {
+    // Use daily or random — toggle which line you prefer
+    // return window.solutionForDate ? window.solutionForDate(new Date()) : window.pickRandomSolution();
+    return window.pickRandomSolution ? window.pickRandomSolution() : '';
+  }
+
+  function flipTile(tile, letter, state, i) {
+    setTimeout(() => {
+      tile.style.transition = `transform ${FLIP_MS}ms ease`;
+      tile.style.transform = 'rotateX(90deg)';
+      setTimeout(() => {
+        tile.textContent = letter;
+        tile.classList.add(state);
+        tile.style.transform = 'rotateX(0deg)';
+      }, FLIP_MS / 2);
+    }, i * STAGGER_MS);
+  }
+
+  function shakeRow(rowEl) {
+    rowEl.classList.add('shake');
+    setTimeout(() => rowEl.classList.remove('shake'), 500);
+  }
+
+  const keyRank = { absent: 0, present: 1, correct: 2 };
+  function setKeyState(letter, newState) {
+    const btn = keyboard.querySelector(`[data-key="${letter}"]`);
+    if (!btn) return;
+
+    const prev = btn.dataset.state;
+
+    if (!prev) {
+      btn.dataset.state = newState;
+      btn.classList.add(newState);
+      return;
     }
-    updateThemeIcon();
-  }
 
-  function updateThemeIcon() {
-    const themeIcon = document.querySelector('.theme-icon');
-    if (themeIcon) {
-      themeIcon.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    if (keyRank[newState] > keyRank[prev]) {
+      btn.dataset.state = newState;
+      btn.classList.remove('absent', 'present', 'correct');
+      btn.classList.add(newState);
     }
   }
 
-  function toggleTheme(e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    console.log('toggleTheme called');
-    console.log('Before toggle - has dark-mode:', document.body.classList.contains('dark-mode'));
-    
-    // Toggle on both html and body for maximum compatibility
-    document.documentElement.classList.toggle('dark-mode');
-    document.body.classList.toggle('dark-mode');
-    
-    const isDark = document.body.classList.contains('dark-mode');
-    console.log('After toggle - has dark-mode:', isDark);
-    console.log('Body classes:', document.body.className);
-    console.log('HTML classes:', document.documentElement.className);
-    
-    // Check computed styles
-    const computedBg = window.getComputedStyle(document.body).backgroundColor;
-    const computedColor = window.getComputedStyle(document.body).color;
-    console.log('Computed background:', computedBg);
-    console.log('Computed color:', computedColor);
-    
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    updateThemeIcon();
-    console.log('Theme toggled to:', isDark ? 'dark' : 'light');
-    
-    // Force a repaint to ensure CSS updates
-    document.body.offsetHeight;
+  function resetKeyboardVisuals() {
+    keyboard.querySelectorAll('.key').forEach(btn => {
+      btn.dataset.state = '';
+      btn.classList.remove('absent', 'present', 'correct');
+    });
   }
-
-  // Initialize theme on page load
-  initTheme();
-  
-  // Make toggleTheme available globally for onclick fallback
-  window.toggleThemeManual = function() {
-    console.log('Manual toggle called');
-    toggleTheme();
-  };
-
-  // Attach event listener to theme toggle button
-  if (themeToggle) {
-    themeToggle.addEventListener('click', toggleTheme);
-    console.log('Theme toggle button found and listener attached');
-  } else {
-    console.error('Theme toggle button not found');
-  }
-  
-  // Test function to manually toggle theme
-  window.testTheme = function() {
-    console.log('Testing theme toggle...');
-    document.body.classList.toggle('dark-mode');
-    console.log('Dark mode:', document.body.classList.contains('dark-mode'));
-    console.log('Computed background:', window.getComputedStyle(document.body).backgroundColor);
-    console.log('Computed color:', window.getComputedStyle(document.body).color);
-  };
 
   // === Functions === //
   function initializeGame() {
-    if (!window.wordList || wordList.length === 0) {
-      window.wordList = [];
-    }
     currentRow = 0;
     currentGuess = '';
+    isAnimating = false;
+    isGameOver = false;
+
     playAgainContainer.style.display = 'none';
-    createBoard();
-    setupKeyboard();  
-    chooseHiddenWord();
+    renderBoard();
+    setupKeyboard();
+    resetKeyboardVisuals();
+
+    answerWord = pickSolution();
+    if (!answerWord) {
+      showToast('No solutions loaded.');
+      isGameOver = true;
+      return;
+    }
+    console.log('The answer word is:', answerWord);
   }
 
-  function createBoard() {
+  // Create the game board
+  // Each row will contain the same number of tiles as the word length
+  function renderBoard() {
     board.innerHTML = '';
     for (let row = 0; row < maxAttempts; row++) {
       const rowElement = document.createElement('div');
@@ -118,12 +109,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function chooseHiddenWord() {
-    const index = Math.floor(Math.random() * wordList.length);
-    hiddenWord = wordList[index].toUpperCase();
-    console.log('The hidden word is:', hiddenWord);
-  }
-
+  // Set up the keyboard layout
   function setupKeyboard() {
     const layout = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -131,6 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
       ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
     ];
 
+    // Clear the keyboard
     keyboard.innerHTML = layout
       .map(row => `
         <div class="row">
@@ -140,9 +127,12 @@ window.addEventListener('DOMContentLoaded', () => {
       .join('');
   }
 
-  function handleInput(key) {
+  // Handle keyboard input
+  function handleKeyInput(key) {
+    if (isAnimating || isGameOver) return;
     key = key.toUpperCase();
 
+    // Handle special keys
     if (key === 'BACKSPACE' || key === '⌫') {
       currentGuess = currentGuess.slice(0, -1);
     } else if (key === 'ENTER') {
@@ -152,17 +142,21 @@ window.addEventListener('DOMContentLoaded', () => {
       currentGuess += key;
     }
 
-    updateCurrentTiles();
+    // Update the current row with the current guess
+    renderCurrentGuessRow();
   }
 
-  function updateCurrentTiles() {
+  // Update the current tiles in the current row
+  function renderCurrentGuessRow() {
     const row = board.children[currentRow];
+    if (!row) return;
     for (let i = 0; i < wordLength; i++) {
       const tile = row.children[i];
       tile.textContent = currentGuess[i] || '';
     }
   }
 
+  // Show a toast message
   function showToast(message, duration = 3000) {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toast-message');
@@ -175,111 +169,141 @@ window.addEventListener('DOMContentLoaded', () => {
     }, duration);
   }
 
+  // Handle the guess when the user presses Enter
   function handleGuess() {
     const guess = currentGuess.toUpperCase();
+    const row = board.children[currentRow];
+
+    if (!row) return;
+
     if (guess.length !== wordLength) {
       showToast(`Enter a ${wordLength}-letter word.`);
+      shakeRow(row);
       return;
     }
 
-    if (!wordList.includes(guess)) {
+    // Check if the guess is in the word list
+    if (!allowedSet.has(guess)) {
       showToast('Not in word list.');
+      shakeRow(row);
       return;
     }
 
-    const row = board.children[currentRow];
-    const secretCopy = hiddenWord.split('');
-    const tileStates = Array(wordLength).fill('absent');
+    // Check if the guess is correct
+    const remainingAnswerLetters = answerWord.split('');
+    const letterStates = Array(wordLength).fill('absent');
 
     for (let i = 0; i < wordLength; i++) {
-      if (guess[i] === hiddenWord[i]) {
-        tileStates[i] = 'correct';
-        secretCopy[i] = null;
+      if (guess[i] === answerWord[i]) {
+        letterStates[i] = 'correct';
+        remainingAnswerLetters[i] = null;
       }
     }
 
-    for (let i = 0; i < wordLength; i++) {
-      if (tileStates[i] === 'correct') continue;
-      const idx = secretCopy.indexOf(guess[i]);
-      if (idx !== -1) {
-        tileStates[i] = 'present';
-        secretCopy[idx] = null;
+    // Check for present letters
+    for (let i = 0; i < wordLength; i++) { // Loop through the word length
+      if (letterStates[i] === 'correct') continue; // If the tile state is correct, continue to the next iteration
+      const idx = remainingAnswerLetters.indexOf(guess[i]); // Get the index of the guess letter in the secret copy
+      if (idx !== -1) { // If the index is not -1, add the present class to the tile state
+        letterStates[i] = 'present';
+        remainingAnswerLetters[idx] = null; // Set the index of the guess letter in the secret copy to null
       }
     }
 
+    isAnimating = true;
     for (let i = 0; i < wordLength; i++) {
       const tile = row.children[i];
       const letter = guess[i];
-
-      setTimeout(() => {
-        tile.style.transition = 'transform 0.3s ease';
-        tile.style.transform = 'rotateX(90deg)';
-        setTimeout(() => {
-          tile.textContent = letter;
-          tile.classList.add(tileStates[i]);
-          tile.style.transform = 'rotateX(0deg)';
-        }, 150);
-      }, i * 300);
+      flipTile(tile, letter, letterStates[i], i);
     }
 
-    updateKeyboardStates(guess, tileStates);
+    // Update the keyboard states after the flip animation
+    setTimeout(() => {
+      isAnimating = false;
+      updateKeyboardStates(guess, letterStates);
 
-    if (guess === hiddenWord) {
-      setTimeout(() => {
+      if (guess === answerWord) {
+        isGameOver = true;
         showToast('You win!');
-        showPlayAgain();
-      }, wordLength * 300 + 300);
-      return;
-    }
-
-    currentRow++;
-    currentGuess = '';
-
-    if (currentRow >= maxAttempts) {
-      setTimeout(() => {
-        showToast(`Game over! The word was ${hiddenWord}`);
-        showPlayAgain();
-      }, wordLength * 300 + 300);
-    } else {
-      updateCurrentTiles();
-    }
-  }
-
-  function updateKeyboardStates(guess, tileStates) {
-    guess.split('').forEach((letter, i) => {
-      const keyButton = keyboard.querySelector(`[data-key="${letter}"]`);
-      if (!keyButton) return;
-
-      if (tileStates[i] === 'correct') {
-        keyButton.classList.add('correct');
-      } else if (tileStates[i] === 'present') {
-        keyButton.classList.add('present');
-      } else {
-        keyButton.classList.add('absent');
+        showPlayAgainButton();
+        return;
       }
-    });
+
+      // Move to the next row
+      currentRow++;
+      currentGuess = '';
+
+      if (currentRow >= maxAttempts) {
+        isGameOver = true;
+        showToast(`Game over! The word was ${answerWord}`);
+        showPlayAgainButton();
+      } else {
+        renderCurrentGuessRow(); // Update the current tiles in the current row
+      }
+    }, wordLength * STAGGER_MS + FLIP_MS + 50);
   }
 
-  function showPlayAgain() {
+  // Update the keyboard states based on the guess
+  function updateKeyboardStates(guess, letterStates) {
+    const best = new Map();
+
+    for (let i = 0; i < guess.length; i++) {
+      const letter = guess[i];
+      const state = letterStates[i];
+      const prev = best.get(letter);
+      if (!prev || keyRank[state] > keyRank[prev]) {
+        best.set(letter, state);
+      }
+    }
+
+    for (const [letter, state] of best) {
+      setKeyState(letter, state);
+    }
+  }
+
+  // Show the play again button
+  function showPlayAgainButton() {
     playAgainContainer.style.display = 'block';
   }
 
+  // Apply saved theme preference on load
+  function initializeDarkMode() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  }
+
+  // Toggle between light and dark mode
+  function toggleDarkMode() {
+    document.documentElement.classList.toggle('dark');
+    const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+  }
+
   // === Event Listeners ===
+  // Handle keyboard input
   document.addEventListener('keydown', (e) => {
     if (/^[a-zA-Z]$/.test(e.key) || e.key === 'Backspace' || e.key === 'Enter') {
-      handleInput(e.key);
+      handleKeyInput(e.key);
       e.preventDefault();
     }
   });
 
+  // Handle keyboard button clicks
   keyboard.addEventListener('click', (e) => {
-    if (e.target.matches('.key')) {
-      handleInput(e.target.dataset.key);
-    }
+    const btn = e.target.closest('.key');
+    if (!btn) return;
+    handleKeyInput(btn.dataset.key);
   });
 
+  // Handle play again button click
   playAgainButton.addEventListener('click', initializeGame);
 
-  // === Initialization === // 
+  // Handle dark mode toggle click
+  darkModeToggle.addEventListener('click', toggleDarkMode);
+
+  // === Initialization === //
+  initializeDarkMode();
   initializeGame();
 });
